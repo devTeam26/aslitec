@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
 import { useGetProductQuery, useGetRelatedProductsQuery } from '@/data/useMockData'
 import { Skeleton } from '@/components/common/Skeleton'
 import BuyNowButton from '@/components/common/BuyNowButton'
+import FadeUp, { reveal } from '@/components/common/FadeUp'
 import { getSmartHomeSection } from '@/data/products/smartHomeLayout'
 import type { ProductVariant } from '@/types'
 import SmartHomeProductPage from './SmartHomeProductPage'
@@ -87,7 +88,7 @@ export default function ProductDetailPage() {
         <div className="grid gap-12 lg:grid-cols-2">
 
           {/* ── Images ─────────────────────────────────────────────────── */}
-          <div>
+          <FadeUp>
             <div className="relative aspect-square overflow-hidden rounded-3xl bg-[#F7F3EE] border border-[#E8E4DF]">
               <AnimatePresence mode="wait">
                 <motion.img
@@ -138,10 +139,10 @@ export default function ProductDetailPage() {
                 ))}
               </div>
             )}
-          </div>
+          </FadeUp>
 
           {/* ── Info ───────────────────────────────────────────────────── */}
-          <div className="space-y-6">
+          <FadeUp delay={0.1} className="relative z-10 space-y-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.3em] text-[#D4693A] mb-2">aslitec</p>
               <h1 className="text-2xl md:text-3xl font-black text-[#2d3444] leading-tight">{product.name}</h1>
@@ -194,11 +195,11 @@ export default function ProductDetailPage() {
                 ))}
               </div>
             )}
-          </div>
+          </FadeUp>
         </div>
 
         {/* ── Tabs ─────────────────────────────────────────────────────── */}
-        <div className="mt-16">
+        <FadeUp className="mt-16">
           <div className="flex border-b border-[#E8E4DF]">
             {(['description', 'specs'] as const).map((t) => (
               <button
@@ -233,19 +234,21 @@ export default function ProductDetailPage() {
               </div>
             )}
           </div>
-        </div>
+        </FadeUp>
 
         {/* ── Related ───────────────────────────────────────────────────── */}
         {related.length > 0 && (
           <section className="mt-20">
-            <p className="text-xs font-bold uppercase tracking-[.35em] text-[#D4693A] mb-2">You might also like</p>
-            <h2 className="text-2xl font-black text-[#2d3444] mb-8">Related Products</h2>
+            <FadeUp>
+              <p className="text-xs font-bold uppercase tracking-[.35em] text-[#D4693A] mb-2">You might also like</p>
+              <h2 className="text-2xl font-black text-[#2d3444] mb-8">Related Products</h2>
+            </FadeUp>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {related.slice(0, 8).map((p) => (
+              {related.slice(0, 8).map((p, i) => (
+                <motion.div key={p.id} {...reveal((i % 4) * 0.06)}>
                 <Link
-                  key={p.id}
                   to={`/products/${p.slug}`}
-                  className="group rounded-2xl bg-white border border-[#E8E4DF] overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                  className="group block rounded-2xl bg-white border border-[#E8E4DF] overflow-hidden hover:shadow-lg transition-shadow duration-300"
                 >
                   <div className="aspect-square bg-[#F7F3EE] overflow-hidden">
                     {p.images[0]?.url && (
@@ -262,6 +265,7 @@ export default function ProductDetailPage() {
                     <h3 className="text-sm font-semibold text-[#2d3444] line-clamp-2 leading-snug">{p.name}</h3>
                   </div>
                 </Link>
+                </motion.div>
               ))}
             </div>
           </section>

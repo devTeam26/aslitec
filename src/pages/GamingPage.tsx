@@ -11,6 +11,7 @@ import Pagination from '@/components/common/Pagination'
 import type { Product } from '@/types'
 import { ctrl1_1 } from '@/data/localImages'
 
+import FadeUp, { reveal } from '@/components/common/FadeUp'
 gsap.registerPlugin(ScrollTrigger)
 
 const CFG = {
@@ -37,17 +38,6 @@ const SCATTERED_BANNER = [
 ]
 
 // ── FadeUp — section headings only, not repeated per-card ─────────────────────
-function FadeUp({ children, delay = 0, className = '' }: {
-  children: React.ReactNode; delay?: number; className?: string
-}) {
-  return (
-    <motion.div className={className}
-      initial={{ opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-    >{children}</motion.div>
-  )
-}
 
 // ── Product card — CSS animations, no per-card JS observers ──────────────────
 function GamingCard({ product, index = 0 }: { product: Product; index?: number }) {
@@ -268,9 +258,7 @@ export default function GamingPage() {
         <div className="flex flex-col lg:flex-row min-h-[580px]">
 
           <motion.div className="flex-1 relative overflow-hidden min-h-[340px] lg:min-h-0"
-            initial={{ opacity: 0, x: -80 }} whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            {...reveal()}
           >
             <img src={ctrl1_1} alt="G7 Pro Controller" className="absolute inset-0 size-full object-cover" loading="lazy" decoding="async" />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, transparent 60%, #F7F3EE)' }} />
@@ -301,9 +289,7 @@ export default function GamingPage() {
                 <ul className="mt-8 space-y-3">
                   {CFG.features.map((f, i) => (
                     <motion.li key={f} className="flex items-center gap-3 text-sm text-[#2d3444] font-medium"
-                      initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
+                      {...reveal(0.1 + i * 0.05)}
                     >
                       <span className="size-1.5 rounded-full bg-[#D4693A] shrink-0" />{f}
                     </motion.li>
@@ -375,10 +361,7 @@ export default function GamingPage() {
             {products.slice(0, Math.min(products.length, 5)).map((p, i) => (
               <motion.div key={p.id}
                 className="shrink-0 w-[260px] relative group rounded-2xl overflow-hidden border border-white/[0.07] cursor-pointer"
-                initial={{ opacity: 0, y: 48, rotate: i % 2 === 0 ? -2 : 2 }}
-                whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.75, delay: i * 0.09, ease: [0.16, 1, 0.3, 1] }}
+                {...reveal(i * 0.06)}
               >
                 <Link to={`/products/${p.slug}`}>
                   <div className="aspect-square overflow-hidden bg-[#1e2530]">

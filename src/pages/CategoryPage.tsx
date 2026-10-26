@@ -11,6 +11,7 @@ import Pagination from '@/components/common/Pagination'
 import type { Product } from '@/types'
 import { useState } from 'react'
 
+import FadeUp, { reveal } from '@/components/common/FadeUp'
 gsap.registerPlugin(ScrollTrigger)
 
 // ── Per-category config ───────────────────────────────────────────────────
@@ -68,17 +69,6 @@ const DEFAULT_CONFIG = {
 }
 
 // ── FadeUp helper ─────────────────────────────────────────────────────────
-function FadeUp({ children, delay = 0, className = '' }: {
-  children: React.ReactNode; delay?: number; className?: string
-}) {
-  return (
-    <motion.div className={className}
-      initial={{ opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-    >{children}</motion.div>
-  )
-}
 
 // ── Product card ──────────────────────────────────────────────────────────
 function CatCard({ product, index = 0 }: { product: Product; index?: number }) {
@@ -334,9 +324,7 @@ export default function CategoryPage() {
 
           {/* Image half */}
           <motion.div className="flex-1 relative overflow-hidden min-h-[340px] lg:min-h-0"
-            initial={{ opacity: 0, x: -80 }} whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            {...reveal()}
           >
             {cat?.image
               ? <img src={cat.image} alt={cat.name} className="absolute inset-0 size-full object-cover" loading="lazy" decoding="async" />
@@ -377,9 +365,7 @@ export default function CategoryPage() {
                 <ul className="mt-8 space-y-3">
                   {cfg.features.map((f, i) => (
                     <motion.li key={f} className="flex items-center gap-3 text-sm text-[#2d3444] font-medium"
-                      initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
+                      {...reveal(0.1 + i * 0.05)}
                     >
                       <span className="size-1.5 rounded-full bg-[#D4693A] shrink-0" />
                       {f}
@@ -390,9 +376,7 @@ export default function CategoryPage() {
                 <motion.a href="#products"
                   onClick={e => { e.preventDefault(); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }}
                   className="mt-10 inline-flex items-center gap-2 text-sm font-bold text-[#2d3444] hover:text-[#D4693A] transition-colors group"
-                  initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+                  {...reveal(0.3)}
                 >
                   Browse Collection
                   <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform duration-200" />
@@ -458,10 +442,7 @@ export default function CategoryPage() {
             {products.slice(0, Math.min(products.length, 5)).map((p, i) => (
               <motion.div key={p.id}
                 className="shrink-0 w-[260px] relative group rounded-2xl overflow-hidden border border-white/[0.07]"
-                initial={{ opacity: 0, y: 48, rotate: i % 2 === 0 ? -2 : 2 }}
-                whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.75, delay: i * 0.09, ease: [0.16, 1, 0.3, 1] }}
+                {...reveal(i * 0.06)}
                 whileHover={{ y: -10, scale: 1.03 }}
               >
                 <Link to={`/products/${p.slug}`}>

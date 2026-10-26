@@ -5,24 +5,8 @@ import type { Product } from '@/types'
 import { ACCESSORY_SECTIONS as SECTIONS, accessorySectionId } from '@/data/products/accessoriesLayout'
 import { useHashScroll } from '@/lib/useHashScroll'
 
+import FadeUp, { reveal } from '@/components/common/FadeUp'
 // ── FadeUp helper ─────────────────────────────────────────────────────────────
-function FadeUp({ children, delay = 0, className = '' }: {
-  children: React.ReactNode
-  delay?: number
-  className?: string
-}) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 36 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  )
-}
 
 // ── Colour swatches ───────────────────────────────────────────────────────────
 const SWATCH: Record<string, string> = {

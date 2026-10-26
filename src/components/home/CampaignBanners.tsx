@@ -5,6 +5,7 @@ import {
   type MotionValue,
 } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
+import { reveal } from '@/components/common/FadeUp'
 
 import cameraWide  from '@/assets/banners/security-camera-wide.webp'
 import cameraPhone from '@/assets/banners/security-camera-mobile.webp'
@@ -61,10 +62,7 @@ function BannerCard({
       <motion.div
         style={{ scale, transformOrigin: 'top center', perspective: 1400 }}
         className="w-full"
-        initial={{ opacity: 0, y: 120, rotate: index % 2 ? 4 : -4 }}
-        whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-        viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        {...reveal()}
       >
         <Link to={banner.href} onPointerMove={onMove} onPointerLeave={onLeave} className="group block" aria-label={`Shop ${banner.label}`}>
           <motion.div

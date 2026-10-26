@@ -8,26 +8,10 @@ import heroBanner from '@/assets/banners/smart-home/hero-wide.webp'
 import SmartHomeCard from '@/components/smart-home/SmartHomeCard'
 import { useHashScroll } from '@/lib/useHashScroll'
 
+import FadeUp, { reveal } from '@/components/common/FadeUp'
 // EZVIZ-style category page: scene hero, pill tabs, banner per group,
 // then white product cards under each section label (aslitec palette).
 
-function FadeUp({ children, delay = 0, className = '' }: {
-  children: React.ReactNode
-  delay?: number
-  className?: string
-}) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  )
-}
 
 // ── Sticky pill tabs ──────────────────────────────────────────────────────────
 function GroupTabs({ groups }: { groups: SmartHomeGroup[] }) {

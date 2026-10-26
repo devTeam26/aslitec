@@ -4,13 +4,15 @@ import { Toaster } from 'sonner'
 import { router } from '@/app/router'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import LoadingScreen from '@/components/common/LoadingScreen'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 
 export default function App() {
   const [loaded, setLoaded] = useState(false)
 
   return (
     <ThemeProvider>
+      {/* honour the visitor's "reduce motion" setting for every animation */}
+      <MotionConfig reducedMotion="user">
       <AnimatePresence>
         {!loaded && (
           <motion.div
@@ -35,6 +37,7 @@ export default function App() {
           />
         </>
       )}
+      </MotionConfig>
     </ThemeProvider>
   )
 }

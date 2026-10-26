@@ -10,23 +10,11 @@ import SmartHomeCard from '@/components/smart-home/SmartHomeCard'
 import BuyNowButton from '@/components/common/BuyNowButton'
 import type { Product } from '@/types'
 
+import FadeUp, { reveal } from '@/components/common/FadeUp'
 // EZVIZ-style product page (lifestyle hero, feature grid, ring diagram,
 // use cases, stats, placement, specs) in the aslitec palette.
 type Tab = 'detail' | 'specs'
 
-function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  )
-}
 
 const Heading = ({ title, text, light = false }: { title: string; text?: string; light?: boolean }) => (
   <FadeUp className="mx-auto max-w-3xl text-center">
