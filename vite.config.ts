@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react'
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer'
 import type { Plugin } from 'vite'
 
+// Banners and generated artwork are exported at their final sizes and quality
+// (name-wide/-mobile/-square.webp and name-<w>w.webp srcset copies); resizing or
+// re-encoding them again only blurs them.
+const PRESIZED = /-(\d+w|wide|mobile|square)-[\w-]{8}\.webp$/
+
 // Step 1: resize down to maxPx — runs first, purely geometric, no quality hit yet
 function imageResizePlugin(maxPx = 800): Plugin {
   return {
@@ -13,7 +18,7 @@ function imageResizePlugin(maxPx = 800): Plugin {
       await Promise.all(
         Object.values(bundle).map(async (asset) => {
           if (asset.type !== 'asset') return
-          if (!/\.(png|jpe?g|webp)$/i.test(asset.fileName)) return
+          if (!/\.(png|jpe?g|webp)$/i.test(asset.fileName) || PRESIZED.test(asset.fileName)) return
           try {
             const buf    = Buffer.from(asset.source as Buffer)
             const meta   = await sharp(buf).metadata()
@@ -49,6 +54,7 @@ export default defineConfig({
     // Step 2 — lossy compress the resized output
     ViteImageOptimizer({
       logStats: true,
+      exclude: PRESIZED,
       png:  { quality: 60, effort: 10 },   // was 72 → 60, ~35% smaller
       jpg:  { quality: 68 },               // was 72
       jpeg: { quality: 68 },

@@ -1,6 +1,8 @@
 // Builds the home page artwork: hero slides (wide + phone) and square feature
 // panels. Real product cut-outs staged on drawn studio sets (podiums, arches,
 // coloured light), then a finishing pass (vignette + grain).
+// Each image is drawn at K× and exported at several widths (name-<w>w.webp) for
+// srcset, plus name.webp at the base size.
 // Run: node scripts/generate-home-banners.mjs [slide ...]
 import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'
@@ -48,15 +50,17 @@ const lin = (id, stops, [x1, y1, x2, y2] = [0, 0, 0, 1]) =>
 const rad = (id, c, a = 1) =>
   `<radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity="${a}"/><stop offset=".5" stop-color="${c}" stop-opacity="${a * 0.35}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`
 const blur = (id, s) => `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${s}"/></filter>`
+// Layouts are in base pixels; K scales the raster (SVG through its viewBox)
+const K = 2
 const svg = (W, H, defs, body) =>
-  Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs>${defs}</defs>${body}</svg>`)
+  Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W * K}" height="${H * K}" viewBox="0 0 ${W} ${H}"><defs>${defs}</defs>${body}</svg>`)
 
 // Stage: a 1 × 0.75 box the props are placed in. Wide slides put it on the
 // right (copy sits left); phone slides put it along the bottom (copy on top).
 const FORMATS = {
-  wide:   { W: 1920, H: 820,  box: { x: 880, y: 40, w: 1000, h: 780 } },
-  mobile: { W: 1080, H: 1920, box: { x: 30, y: 1000, w: 1020, h: 900 } },
-  square: { W: 1200, H: 1200, box: { x: 60, y: 260, w: 1080, h: 940 } },
+  wide:   { W: 1920, H: 820,  box: { x: 880, y: 40, w: 1000, h: 780 },  widths: [1280, 1920, 2560, 3840] },
+  mobile: { W: 1080, H: 1920, box: { x: 30, y: 1000, w: 1020, h: 900 }, widths: [640, 828, 1080, 1440, 2160] },
+  square: { W: 1200, H: 1200, box: { x: 60, y: 260, w: 1080, h: 940 },  widths: [640, 960, 1200, 1600, 2400] },
 }
 const stage = (box) => {
   const s = Math.min(box.w, box.h / 0.75)
@@ -117,7 +121,7 @@ async function shadowOf(cut, opacity, blurPx) {
 }
 
 async function render(name, fmt, { theme, floor = 0.62, decor = () => '', podiums = [], items = [], glows = [] }) {
-  const { W, H, box } = FORMATS[fmt]
+  const { W, H, box, widths } = FORMATS[fmt]
   const st = stage(box)
   const T = THEMES[theme]
   const fy = st.Y(floor)
@@ -137,12 +141,12 @@ async function render(name, fmt, { theme, floor = 0.62, decor = () => '', podium
 
   const layers = []
   for (const it of items) {
-    const cut = await cutout(it.src, st.L(it.h), it.rot ?? 0)
-    const left = Math.round(st.X(it.cx) - cut.w / 2)
-    const top = Math.round(st.Y(it.base) - cut.h)
+    const cut = await cutout(it.src, st.L(it.h) * K, it.rot ?? 0)
+    const left = Math.round(st.X(it.cx) * K - cut.w / 2)
+    const top = Math.round(st.Y(it.base) * K - cut.h)
     if (it.shadow !== false) {
-      const sh = await shadowOf(cut, 0.45, Math.round(Math.max(6, st.L(0.012))))
-      layers.push({ input: sh.buf, left: left - sh.pad + Math.round(st.L(0.012)), top: top - sh.pad + Math.round(st.L(0.02)) })
+      const sh = await shadowOf(cut, 0.45, Math.round(Math.max(6, st.L(0.012)) * K))
+      layers.push({ input: sh.buf, left: left - sh.pad + Math.round(st.L(0.012) * K), top: top - sh.pad + Math.round(st.L(0.02) * K) })
     }
     layers.push({ input: cut.buf, left, top })
   }
@@ -157,7 +161,7 @@ async function render(name, fmt, { theme, floor = 0.62, decor = () => '', podium
   for (const l of layers) {
     const m = await sharp(l.input).metadata()
     const x0 = Math.max(0, l.left), y0 = Math.max(0, l.top)
-    const x1 = Math.min(W, l.left + m.width), y1 = Math.min(H, l.top + m.height)
+    const x1 = Math.min(W * K, l.left + m.width), y1 = Math.min(H * K, l.top + m.height)
     if (x1 <= x0 || y1 <= y0) continue
     const input = (x0 !== l.left || y0 !== l.top || x1 - l.left !== m.width || y1 - l.top !== m.height)
       ? await sharp(l.input).extract({ left: x0 - l.left, top: y0 - l.top, width: x1 - x0, height: y1 - y0 }).toBuffer()
@@ -165,12 +169,16 @@ async function render(name, fmt, { theme, floor = 0.62, decor = () => '', podium
     clipped.push({ input, left: x0, top: y0 })
   }
 
-  const file = `${OUT}/${name}-${fmt}.webp`
-  await sharp(await base.png().toBuffer())
+  const master = await sharp(await base.png().toBuffer())
     .composite([...clipped, { input: finish, blend: 'over' }])
-    .webp({ quality: 80, effort: 5 })
-    .toFile(file)
-  console.log('✓', file)
+    .png().toBuffer()
+  const stem = `${OUT}/${name}-${fmt}`
+  for (const [file, w] of [[`${stem}.webp`, W], ...widths.map((w) => [`${stem}-${w}w.webp`, w])]) {
+    await sharp(master).resize({ width: w, kernel: 'lanczos3' })
+      .webp({ quality: 88, effort: 6, smartSubsample: true })
+      .toFile(file)
+  }
+  console.log('✓', stem, [W, ...widths].join(' '))
 }
 
 // ── Decor ────────────────────────────────────────────────────────────────────

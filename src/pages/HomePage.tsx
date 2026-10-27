@@ -29,6 +29,20 @@ import stylusPanel from '@/assets/banners/home/feature-stylus-square.webp'
 import FadeUp, { reveal } from '@/components/common/FadeUp'
 const EASE = [0.16, 1, 0.3, 1] as const
 
+// Generated artwork ships as name.webp plus name-<width>w.webp copies (see the
+// scripts); srcSetOf() turns an imported image URL into a srcSet over them.
+const ART = import.meta.glob(['/src/assets/banners/home/*.webp', '/src/assets/smart home/scenes/*/*.webp'], { eager: true, import: 'default' }) as Record<string, string>
+const ART_PATH = new Map(Object.entries(ART).map(([path, url]) => [url, path]))
+const srcSetOf = (url?: string): string | undefined => {
+  const stem = url && ART_PATH.get(url)?.replace(/\.webp$/, '')
+  if (!stem) return undefined
+  const set = Object.entries(ART).flatMap(([path, src]) => {
+    const w = path.startsWith(`${stem}-`) && path.slice(stem.length + 1).match(/^(\d+)w\.webp$/)
+    return w ? [`${src} ${w[1]}w`] : []
+  })
+  return set.length ? set.join(', ') : undefined
+}
+
 // Lifestyle clips dropped into src/assets/videos/ (see PROMPTS.md there) are
 // picked up automatically: hero-<slide>.mp4 replaces a hero slide's artwork,
 // action-<slide>.mp4 adds a card to the "In Action" reel.
@@ -106,8 +120,9 @@ function HeroSlider() {
             animate={{ scale: 1 }}
             transition={{ duration: SLIDE_MS / 1000 + 1.5, ease: 'easeOut' }}
           >
-            <source media="(min-width: 768px)" srcSet={slide.wide} />
-            <img src={slide.phone} alt={slide.tab} className="size-full object-cover md:object-[85%_center]" />
+            {/* the slide never gets narrower than 500px tall, i.e. ~1170px of artwork */}
+            <source media="(min-width: 768px)" srcSet={srcSetOf(slide.wide) ?? slide.wide} sizes="(max-width: 1170px) 1170px, 100vw" />
+            <img src={slide.phone} srcSet={srcSetOf(slide.phone)} sizes="100vw" alt={slide.tab} className="size-full object-cover md:object-[85%_center]" />
           </motion.picture>
           )}
         </motion.div>
@@ -396,7 +411,7 @@ function FeatureSplit({ f, index }: { f: (typeof FEATURES)[number]; index: numbe
           className="relative aspect-square overflow-hidden"
           {...reveal()}
         >
-          <img src={f.image} alt={f.tag} loading="lazy" className="size-full object-cover" />
+          <img src={f.image} srcSet={srcSetOf(f.image)} sizes="(min-width: 768px) 50vw, 100vw" alt={f.tag} loading="lazy" className="size-full object-cover" />
         </motion.div>
         <div className="px-6 py-14 md:px-16 lg:px-24">
           <FadeUp>
@@ -473,6 +488,9 @@ function HomeScenes() {
             <motion.img
               key={r.image}
               src={r.image}
+              srcSet={srcSetOf(r.image)}
+              // 4:3 crop of ~2.4:1 artwork on phones shows it at ~1.8× the box width
+              sizes="(min-width: 1400px) 1336px, (min-width: 768px) calc(100vw - 4rem), 180vw"
               alt={r.room}
               className="absolute inset-0 size-full object-cover object-[70%_center]"
               initial={{ opacity: 0, scale: 1.06 }}
@@ -570,7 +588,7 @@ function FeaturedCollections() {
           {COLLECTIONS.map((c, ci) => (
             <FadeUp key={c.title} delay={ci * 0.07}>
               <Link to={c.href} className="group relative block aspect-[9/16] lg:aspect-[3/4] overflow-hidden rounded-3xl">
-                <img src={c.image} alt={c.title} loading="lazy" className="size-full object-cover object-bottom transition-transform duration-700 ease-out group-hover:scale-105" />
+                <img src={c.image} srcSet={srcSetOf(c.image)} sizes="(min-width: 1400px) 330px, (min-width: 1024px) 25vw, 50vw" alt={c.title} loading="lazy" className="size-full object-cover object-bottom transition-transform duration-700 ease-out group-hover:scale-105" />
                 <div className="absolute inset-x-0 top-0 p-5 md:p-7">
                   <h3 className={`text-xl md:text-3xl font-black ${c.light ? 'text-white' : 'text-[#2d3444]'}`}>{c.title}</h3>
                   <p className={`mt-1 text-xs md:text-sm ${c.light ? 'text-white/70' : 'text-[#2d3444]/70'}`}>{c.sub}</p>

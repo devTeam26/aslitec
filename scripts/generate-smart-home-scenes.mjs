@@ -1,6 +1,8 @@
 // Builds every Smart Home image: product-page scenes and category banners.
 // Drawn scenes (SVG) + real product cut-outs, lit to match the scene, then a
 // photographic finishing pass (grade, bloom, vignette, grain).
+// Scenes are drawn at K× and exported at their base size plus wider
+// name-<w>w.webp copies for srcset.
 // Run: node scripts/generate-smart-home-scenes.mjs [MODEL ... | banners]
 import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'
@@ -46,7 +48,11 @@ const DEFS = `<defs>
   <filter id="sh" x="-50%" y="-400%" width="200%" height="900%"><feGaussianBlur stdDeviation="14"/></filter>
   <filter id="sh2" x="-50%" y="-400%" width="200%" height="900%"><feGaussianBlur stdDeviation="4"/></filter>
 </defs>`
-const svg = (W, H, body) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${DEFS}${body}</svg>`
+// Layouts are in base pixels; K scales the raster (SVG through its viewBox)
+let K = 1
+// wide scenes up to 3840px, small ones to 3× for large crops (e.g. the home room viewer)
+const scaleFor = (W) => (W >= 1920 ? 2 : 3)
+const svg = (W, H, body) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W * K}" height="${H * K}" viewBox="0 0 ${W} ${H}">${DEFS}${body}</svg>`
 const buf = (W, H, body) => Buffer.from(svg(W, H, body))
 const lin = (id, stops, [x1, y1, x2, y2] = [0, 0, 0, 1]) =>
   `<linearGradient id="${id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops
@@ -460,8 +466,9 @@ async function lightProduct(png, width, height, cx, scene, W) {
 async function place(path, W, H, scene, { h, x, base, maxW = 0.8, shadow }) {
   const bottom = Math.round(base != null ? H * base : scene.floor)
   const maxH = Math.min(H * h, bottom - H * 0.05)
-  let png = await sharp(await cutout(path)).resize({ height: Math.round(maxH), width: Math.round(W * maxW), fit: 'inside' }).png().toBuffer()
-  const { width, height } = await sharp(png).metadata()
+  let png = await sharp(await cutout(path)).resize({ height: Math.round(maxH * K), width: Math.round(W * maxW * K), fit: 'inside' }).png().toBuffer()
+  const meta = await sharp(png).metadata()
+  const width = meta.width / K, height = meta.height / K
   // keep the whole product inside the frame
   const cx = Math.min(Math.max(W * x, width / 2 + W * 0.03), W * 0.97 - width / 2)
   const left = Math.round(cx - width / 2), top = bottom - height
@@ -473,11 +480,12 @@ async function place(path, W, H, scene, { h, x, base, maxW = 0.8, shadow }) {
   if (mode === 'drop') {
     // soft cast shadow on the wall, pushed away from the light
     const dir = lx * W < cx ? 1 : -1
-    const sil = await sharp({ create: { width, height, channels: 4, background: { r: 30, g: 20, b: 12, alpha: 0.42 } } })
+    const sil = await sharp({ create: { width: meta.width, height: meta.height, channels: 4, background: { r: 30, g: 20, b: 12, alpha: 0.42 } } })
       .composite([{ input: png, blend: 'dest-in' }]).png().toBuffer()
     const pad = 60
-    const soft = await sharp(sil).extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: 0, g: 0, b: 0, alpha: 0 } }).blur(18).png().toBuffer()
-    const hard = await sharp(sil).extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: 0, g: 0, b: 0, alpha: 0 } }).blur(5).png().toBuffer()
+    const p = pad * K
+    const soft = await sharp(sil).extend({ top: p, bottom: p, left: p, right: p, background: { r: 0, g: 0, b: 0, alpha: 0 } }).blur(18 * K).png().toBuffer()
+    const hard = await sharp(sil).extend({ top: p, bottom: p, left: p, right: p, background: { r: 0, g: 0, b: 0, alpha: 0 } }).blur(5 * K).png().toBuffer()
     layers.push({ input: soft, left: left - pad + dir * Math.round(width * 0.12), top: top - pad + Math.round(height * 0.08) })
     layers.push({ input: hard, left: left - pad + dir * Math.round(width * 0.03), top: top - pad + Math.round(height * 0.02) })
   } else {
@@ -489,7 +497,7 @@ async function place(path, W, H, scene, { h, x, base, maxW = 0.8, shadow }) {
     if (scene.reflect) {
       const rh = Math.round(height * 0.35)
       const mask = buf(width, height, `<defs>${lin('m', [[0, '#fff', scene.reflect], [rh / height, '#fff', 0], [1, '#fff', 0]])}</defs><rect width="${width}" height="${height}" fill="url(#m)"/>`)
-      const refl = await sharp(png).flip().composite([{ input: mask, blend: 'dest-in' }]).blur(1.5).png().toBuffer()
+      const refl = await sharp(png).flip().composite([{ input: mask, blend: 'dest-in' }]).blur(1.5 * K).png().toBuffer()
       layers.push({ input: refl, left, top: bottom })
     }
   }
@@ -508,10 +516,10 @@ async function finish(W, H, scene) {
   }
   if (g.tint) {
     const [r, gg, b, a] = g.tint
-    out.push({ input: { create: { width: W, height: H, channels: 4, background: { r, g: gg, b, alpha: a } } }, blend: 'soft-light' })
+    out.push({ input: { create: { width: W * K, height: H * K, channels: 4, background: { r, g: gg, b, alpha: a } } }, blend: 'soft-light' })
   }
   out.push({ input: buf(W, H, `<defs><radialGradient id="vg" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140c06" stop-opacity="${g.vig ?? 0.3}"/></radialGradient></defs><rect width="${W}" height="${H}" fill="url(#vg)"/>`) })
-  const key = `${W}x${H}`
+  const key = `${W}x${H}@${K}`
   if (!grainCache.has(key)) {
     grainCache.set(key, await sharp(buf(W, H, `<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="5"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0" intercept=".16"/></feComponentTransfer></filter><rect width="${W}" height="${H}" filter="url(#gr)"/>`)).png().toBuffer())
   }
@@ -533,13 +541,20 @@ async function clip(layers, W, H) {
 
 async function render(file, W, H, sceneName, items, under = [], fx = [], model) {
   texN = 0
+  K = scaleFor(W)
   const scene = SCENES[sceneName](W, H)
   const placed = []
   for (const [path, spec] of items) placed.push(await place(path, W, H, scene, spec))
   const fxOut = await Promise.all(fx.map((name) => FX[name](W, H, placed[0].box, scene, model)))
   const layers = [...under, ...fxOut.flatMap((f) => f.under ?? []), ...placed.flat(), ...fxOut.flatMap((f) => f.over ?? [])]
-  const base = await sharp(Buffer.from(scene.bg)).composite(await clip(layers, W, H)).png().toBuffer()
-  await sharp(base).composite(await finish(W, H, scene)).webp({ quality: 84 }).toFile(file)
+  const px = layers.map((l) => (l.left == null ? l : { ...l, left: Math.round(l.left * K), top: Math.round(l.top * K) }))
+  const base = await sharp(Buffer.from(scene.bg)).composite(await clip(px, W * K, H * K)).png().toBuffer()
+  const master = await sharp(base).composite(await finish(W, H, scene)).png().toBuffer()
+  const stem = file.replace(/\.webp$/, '')
+  const widths = K > 1 ? [...new Set([W, ...[640, 1280, 1920, 2560, 3840].filter((w) => w <= W * K)])].sort((a, b) => a - b) : []
+  for (const [out, w] of [[file, W], ...widths.map((w) => [`${stem}-${w}w.webp`, w])]) {
+    await sharp(master).resize({ width: w, kernel: 'lanczos3' }).webp({ quality: 88, effort: 6, smartSubsample: true }).toFile(out)
+  }
 }
 
 // ── Overlays (drawn under the product) ──────────────────────────────────────
@@ -910,6 +925,7 @@ for (const [model, [path, kind]] of Object.entries(PRODUCTS)) {
   mkdirSync(dir, { recursive: true })
   for (const [slot, [scene, spec, extra]] of Object.entries(SHOTS[kind])) {
     const [W, H] = slot === 'hero' ? [1920, 800] : [800, 560]
+    K = scaleFor(W)
     const under = extra === 'phone' ? await phoneOverlay(W, H) : extra === 'detect' ? detectOverlay(W, H) : []
     await render(`${dir}/${slot === 'hero' ? 'hero-wide' : slot}.webp`, W, H, scene, [[path, spec]], under)
   }
