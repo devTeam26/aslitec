@@ -6,6 +6,7 @@
 // Run: node scripts/generate-smart-home-scenes.mjs [MODEL ... | banners]
 import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 const SRC = 'src/assets/smart home'
 const OUT = `${SRC}/scenes`
@@ -911,27 +912,32 @@ const STORY = {
   stand: MOUNT_STORY(F('office', S(0.5, 0.76), 'baseRing')),
 }
 
-const only = process.argv.slice(2)
-if (!only.length || only.includes('banners')) {
-  mkdirSync(BANNERS, { recursive: true })
-  for (const [name, [W, H, scene, items]] of Object.entries(BANNER_SHOTS)) {
-    await render(`${BANNERS}/${name}-wide.webp`, W, H, scene, items.map(([m, s]) => [IMG[m], s]))
-    console.log('wrote banner', name)
+// Shared with scripts/generate-category-banners.mjs
+export { SCENES, render, svg, lin, rad, tex, wood, plaster, plant, frond, gobo, bokeh, cyl, S, C, IMG }
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const only = process.argv.slice(2)
+  if (!only.length || only.includes('banners')) {
+    mkdirSync(BANNERS, { recursive: true })
+    for (const [name, [W, H, scene, items]] of Object.entries(BANNER_SHOTS)) {
+      await render(`${BANNERS}/${name}-wide.webp`, W, H, scene, items.map(([m, s]) => [IMG[m], s]))
+      console.log('wrote banner', name)
+    }
   }
-}
-for (const [model, [path, kind]] of Object.entries(PRODUCTS)) {
-  if (only.length && !only.includes(model)) continue
-  const dir = `${OUT}/${model}`
-  mkdirSync(dir, { recursive: true })
-  for (const [slot, [scene, spec, extra]] of Object.entries(SHOTS[kind])) {
-    const [W, H] = slot === 'hero' ? [1920, 800] : [800, 560]
-    K = scaleFor(W)
-    const under = extra === 'phone' ? await phoneOverlay(W, H) : extra === 'detect' ? detectOverlay(W, H) : []
-    await render(`${dir}/${slot === 'hero' ? 'hero-wide' : slot}.webp`, W, H, scene, [[path, spec]], under)
+  for (const [model, [path, kind]] of Object.entries(PRODUCTS)) {
+    if (only.length && !only.includes(model)) continue
+    const dir = `${OUT}/${model}`
+    mkdirSync(dir, { recursive: true })
+    for (const [slot, [scene, spec, extra]] of Object.entries(SHOTS[kind])) {
+      const [W, H] = slot === 'hero' ? [1920, 800] : [800, 560]
+      K = scaleFor(W)
+      const under = extra === 'phone' ? await phoneOverlay(W, H) : extra === 'detect' ? detectOverlay(W, H) : []
+      await render(`${dir}/${slot === 'hero' ? 'hero-wide' : slot}.webp`, W, H, scene, [[path, spec]], under)
+    }
+    for (const [slot, [scene, spec, fx]] of Object.entries(STORY[kind] ?? {})) {
+      const [W, H] = slot.endsWith('-wide') ? [1920, 760] : [800, 560]
+      await render(`${dir}/${slot}.webp`, W, H, scene, [[path, spec]], [], fx, model)
+    }
+    console.log('wrote', model)
   }
-  for (const [slot, [scene, spec, fx]] of Object.entries(STORY[kind] ?? {})) {
-    const [W, H] = slot.endsWith('-wide') ? [1920, 760] : [800, 560]
-    await render(`${dir}/${slot}.webp`, W, H, scene, [[path, spec]], [], fx, model)
-  }
-  console.log('wrote', model)
 }

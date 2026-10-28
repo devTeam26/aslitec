@@ -37,7 +37,7 @@ export const controllers: Product[] = [
     attributes: [],
     variants: [],
     images: [
-      { id: 'img-ctrl-b1', url: ctrl1_1, alt: 'G7 Pro Black RGB – front', sortOrder: 0 },
+      { id: 'img-ctrl-b1', url: ctrl2_1, alt: 'G7 Pro Black RGB – front', sortOrder: 0 },
 
     ],
     specifications: SPECS,
@@ -69,7 +69,7 @@ export const controllers: Product[] = [
     attributes: [],
     variants: [],
     images: [
-      { id: 'img-ctrl-w1', url: ctrl2_1, alt: 'G7 Pro White RGB – front', sortOrder: 0 },
+      { id: 'img-ctrl-w1', url: ctrl5_1, alt: 'G7 Pro White RGB – front', sortOrder: 0 },
     ],
     specifications: SPECS,
     tags: ['controller', 'gaming', 'rgb', 'wireless', 'white', 'ps4', 'pc'],
@@ -100,7 +100,7 @@ export const controllers: Product[] = [
     attributes: [],
     variants: [],
     images: [
-      { id: 'img-ctrl-g1', url: ctrl3_1, alt: 'G7 Pro Green Camo – front', sortOrder: 0 },
+      { id: 'img-ctrl-g1', url: ctrl4_1, alt: 'G7 Pro Green Camo – front', sortOrder: 0 },
     ],
     specifications: SPECS,
     tags: ['controller', 'gaming', 'rgb', 'wireless', 'camo', 'green', 'ps4', 'pc'],
@@ -131,7 +131,7 @@ export const controllers: Product[] = [
     attributes: [],
     variants: [],
     images: [
-      { id: 'img-ctrl-gr1', url: ctrl4_1, alt: 'G7 Pro Gray Camo – front', sortOrder: 0 },
+      { id: 'img-ctrl-gr1', url: ctrl3_1, alt: 'G7 Pro Gray Camo – front', sortOrder: 0 },
     ],
     specifications: SPECS,
     tags: ['controller', 'gaming', 'rgb', 'wireless', 'camo', 'gray', 'ps4', 'pc'],
@@ -162,7 +162,7 @@ export const controllers: Product[] = [
     attributes: [],
     variants: [],
     images: [
-      { id: 'img-ctrl-bl1', url: ctrl5_1, alt: 'G7 Pro Blue Camo – front', sortOrder: 0 },
+      { id: 'img-ctrl-bl1', url: ctrl1_1, alt: 'G7 Pro Blue Camo – front', sortOrder: 0 },
     ],
     specifications: SPECS,
     tags: ['controller', 'gaming', 'rgb', 'wireless', 'camo', 'blue', 'ps4', 'pc'],

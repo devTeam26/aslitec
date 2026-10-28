@@ -27,10 +27,10 @@ const pencil_life_pink_top = pencil_bc24016_pink_shot
 const pencil_life_wht_top  = pencil_bc24016_white_shot
 
 // ── Kettles ──────────────────────────────────────────────────────────────────
-import kettle_mint_shot  from '../assets/home appliance/app-a6.webp'
+import kettle_mint_shot  from '../assets/home appliance/app-a4.webp'
 const kettle_mint_life = kettle_mint_shot
 
-import kettle_black_shot from '../assets/home appliance/app-a7.webp'
+import kettle_black_shot from '../assets/home appliance/app-a2.webp'
 const kettle_black_life1 = kettle_black_shot
 const kettle_black_life2 = kettle_black_shot
 

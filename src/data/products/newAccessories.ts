@@ -12,12 +12,6 @@ const byFile = (g: Glob, file: string) => {
   return g[key]
 }
 
-const charger35  = import.meta.glob<string>('../../assets/accessories/35/*.webp',  { eager: true, import: 'default' })
-const charger45  = import.meta.glob<string>('../../assets/accessories/45/*.webp',  { eager: true, import: 'default' })
-const charger65  = import.meta.glob<string>('../../assets/accessories/65/*.webp',  { eager: true, import: 'default' })
-const charger100 = import.meta.glob<string>('../../assets/accessories/100/*.webp', { eager: true, import: 'default' })
-const charger140 = import.meta.glob<string>('../../assets/accessories/140/*.webp', { eager: true, import: 'default' })
-const charger200 = import.meta.glob<string>('../../assets/accessories/200/*.webp', { eager: true, import: 'default' })
 const r001  = import.meta.glob<string>('../../assets/accessories/R001/*.webp',   { eager: true, import: 'default' })
 const r002  = import.meta.glob<string>('../../assets/accessories/R002/*.webp',   { eager: true, import: 'default' })
 const r005  = import.meta.glob<string>('../../assets/accessories/R005/*.webp',   { eager: true, import: 'default' })
@@ -87,38 +81,6 @@ const build = (d: Input, i: number): Product => {
   }
 }
 
-// ── GaN display chargers ──────────────────────────────────────────────────────
-// Colour from the file name: 枪 = gunmetal, 银 = silver, 黑 = black
-const chargerColors = (g: Glob): Option[] => {
-  const pick = (ch: string) => g[Object.keys(g).find((k) => k.includes(ch))!]
-  return [
-    { name: 'Gunmetal', image: pick('枪') },
-    { name: 'Silver',   image: pick('银') },
-    { name: 'Black',    image: pick('黑') },
-  ]
-}
-
-const chargerSpecs = (ports: string, perPort?: string): ProductSpecification[] => [
-  { label: 'Technology', value: 'GaN' },
-  { label: 'Ports', value: ports },
-  ...(perPort ? [{ label: 'Port Output', value: perPort }] : []),
-  { label: 'Display', value: 'Round wattage display on top' },
-  { label: 'Plug', value: 'UK 3-pin' },
-  { label: 'Design', value: 'Glowing light strip around the base' },
-  { label: 'Color', value: 'Gunmetal, Silver, Black' },
-]
-
-const charger = (w: number, g: Glob, ports: string, perPort: string | undefined, use: string, featured = false): Input => ({
-  model: `GaN-${w}W`,
-  name: `GaN Display Charger ${w}W`,
-  description: `A ${w}W GaN wall charger with a live wattage display on top and a glowing light strip around the base. ${ports} let you ${use}. Finished in gunmetal, silver or black.`,
-  shortDescription: `${w}W GaN · ${ports} · Wattage display`,
-  tags: ['charger', 'display-charger', 'gan', `${w}w`, 'usb-c'],
-  specs: chargerSpecs(ports, perPort),
-  options: chargerColors(g),
-  featured,
-})
-
 // ── Ring grips & stands ───────────────────────────────────────────────────────
 const colorOptions = (g: Glob, names: string[]): Option[] =>
   sorted(g).map((image, i) => ({ name: names[i] ?? `Style ${i + 1}`, image }))
@@ -147,13 +109,6 @@ const lensGallery = [
 ].map((f) => byFile(lens, f))
 
 const inputs: Input[] = [
-  charger(35,  charger35,  '2× USB-C', undefined, 'top up a phone and earbuds together'),
-  charger(45,  charger45,  '2× USB-C', undefined, 'fast-charge a phone and a tablet at once'),
-  charger(65,  charger65,  '2× USB-C + 1× USB-A', 'USB-C1/C2: 65W · USB-A: 30W', 'power a laptop, phone and accessory from one plug', true),
-  charger(100, charger100, '2× USB-C + 1× USB-A', 'USB-C1/C2: 100W · USB-A: 30W', 'run a laptop at full speed with room for two more devices', true),
-  charger(140, charger140, '3× USB-C + 1× USB-A', undefined, 'charge four devices at once, including a power-hungry laptop'),
-  charger(200, charger200, '2× USB-C + 1× USB-A', 'USB-C1/C2: 200W · USB-A: 30W', 'replace a whole desk of power bricks'),
-
   ring('R001', 'Wave Grip Ring',
     'A round phone ring with a soft, wave-textured grip band across the middle. Slide your fingers under the band for a secure one-handed hold while you scroll, shoot or call.',
     'Phone ring grip · Wave-textured band · 7 colours',

@@ -23,6 +23,7 @@ export const router = createBrowserRouter([
       { path: 'categories/gaming',        element: Lazy(() => import('@/pages/GamingPage')) },
       { path: 'categories/accessories',  element: Lazy(() => import('@/pages/AccessoriesPage')) },
       { path: 'categories/smart-home',   element: Lazy(() => import('@/pages/SmartHomePage')) },
+      { path: 'categories/appliances',   element: Lazy(() => import('@/pages/AppliancesPage')) },
       { path: 'categories/:slug',        element: Lazy(() => import('@/pages/CategoryPage')) },
     ],
   },

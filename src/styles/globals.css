@@ -105,7 +105,6 @@
 .animate-glow-pulse  { animation: glow-pulse 2.5s ease-in-out infinite; }
 .animate-beam        { animation: beam 2.5s ease-in-out infinite; }
 .animate-fade-in     { animation: fade-in 0.5s ease-out both; }
-.gaming-card         { animation: fadeInUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
 
 .clip-wrap  { overflow: hidden; }
 .clip-inner { display: block; will-change: transform; }
